@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GustavoFlix</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://apis.google.com/js/api.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+</head>
+<body>
+  <header class="navbar" style="display:none;">
+    <h1 class="logo">GustavoFlix</h1>
+    <nav>
+      <ul>
+        <li><a href="#">Início</a></li>
+        <li><a href="#">Séries</a></li>
+        <li><a href="#">Filmes</a></li>
+        <li><a href="#">Minha Lista</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <section class="login" id="loginSection">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Usuário" required />
+      <input type="password" id="password" placeholder="Senha" required />
+      <button type="submit">Entrar</button>
+    </form>
+    <p id="loginMessage"></p>
+  </section>
+
+  <div id="mainContent" style="display:none;">
+    <section class="banner">
+      <div class="banner-content">
+    
+        <h2>Destaque: Paixão de Joana Darc</h2>
+        <p>A jovem camponesa Joana D'Arc é condenada à morte por ter liderado o povo francês contra o exército invasor inglês, dizendo que foi inspirada por Jesus e São Miguel. Ela passa suas últimas horas de vida capturada e torturada pelos ingleses.</p>
+        <button>Assistir agora</button>
+      </div>
+    </section>
+
+    <section class="filmes">
+      <h2>Populares</h2>
+      <input type="text" id="searchInput" placeholder="Buscar filmes..." />
+      <div class="slider-buttons">
+        <button onclick="slideLeft()">⟨</button>
+        <button onclick="slideRight()">⟩</button>
+      </div>
+      <div class="filmes-container" id="filmesContainer">
+        <a href="filme1.html" class="filme-card">
+          <img src="joana.webp" alt="The Passion of Joan of Arc" />
+          <span>The Passion of Joan of Arc</span>
+        </a>
+        <a href="filme2.html" class="filme-card">
+          <img src="https://via.placeholder.com/150x220?text=Titanic" alt="Titanic" />
+          <span>Titanic</span>
+        </a>
+        <a href="filme3.html" class="filme-card">
+          <img src="https://via.placeholder.com/150x220?text=Shrek" alt="Shrek" />
+          <span>Shrek</span>
+        </a>
+        <a href="filme4.html" class="filme-card">
+          <img src="https://via.placeholder.com/150x220?text=Vingadores" alt="Vingadores" />
+          <span>Vingadores</span>
+        </a>
+        <a href="filme5.html" class="filme-card">
+          <img src="https://via.placeholder.com/150x220?text=Batman" alt="Batman" />
+          <span>Batman</span>
+        </a>
+        <a href="filme6.html" class="filme-card">
+          <img src="https://via.placeholder.com/150x220?text=Homem-Aranha" alt="Homem-Aranha" />
+          <span>Homem-Aranha</span>
+        </a>
+        <!-- Adicione mais cards até 10 -->
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>&copy; 2025 GustavoFlix - Todos os direitos reservados</p>
+    </footer>
+  </div>
+
+  <!-- Adicione onde quiser mostrar o botão -->
+  <div id="g_id_onload"
+       data-client_id="http://697508543949-82g2lr82vnnblqvihena1fbh291gtenp.apps.googleusercontent.com/"
+       data-callback="onSignIn">
+  </div>
+  <div class="g_id_signin" data-type="standard"></div>
+
+  <script>
+    // Simples validação de login
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Você pode trocar por validação real se quiser
+      const user = document.getElementById('username').value;
+      const pass = document.getElementById('password').value;
+      if(user && pass) {
+        document.getElementById('loginSection').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        document.querySelector('.navbar').style.display = 'flex';
+      } else {
+        document.getElementById('loginMessage').textContent = 'Usuário ou senha inválidos!';
+      }
+    });
+  </script>
+  <script>
+  // Substitua pelo seu Client ID
+  const CLIENT_ID = 'http://697508543949-82g2lr82vnnblqvihena1fbh291gtenp.apps.googleusercontent.com/';
+  const API_KEY = 'GGOCSPX-TcKz1soii5pqVlinAP2rAC_5ytZp';
+  const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+  const SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+
+  function handleClientLoad() {
+    gapi.load('client:auth2', initClient);
+  }
+
+  function initClient() {
+    gapi.client.init({
+      apiKey: API_KEY,
+      clientId: CLIENT_ID,
+      discoveryDocs: DISCOVERY_DOCS,
+      scope: SCOPES
+    }).then(function () {
+      // Tenta login automático
+      if (!gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        gapi.auth2.getAuthInstance().signIn();
+      }
+      listVideos();
+    });
+  }
+
+  function listVideos() {
+    gapi.client.drive.files.list({
+      'pageSize': 10,
+      'fields': "files(id, name, mimeType, webViewLink)",
+      'q': "mimeType contains 'video/'"
+    }).then(function(response) {
+      const files = response.result.files;
+      const container = document.getElementById('filmesContainer');
+      container.innerHTML = '';
+      if (files && files.length > 0) {
+        files.forEach(function(file) {
+          // Usa o player do Google Drive
+          const card = document.createElement('div');
+          card.className = 'filme-card';
+          card.innerHTML = `
+            <span>${file.name}</span>
+            <iframe src="https://drive.google.com/file/d/${file.id}/preview" width="320" height="180" allow="autoplay"></iframe>
+          `;
+          container.appendChild(card);
+        });
+      } else {
+        container.innerHTML = '<p>Nenhum vídeo encontrado no seu Google Drive.</p>';
+      }
+    });
+  }
+
+  // Chama a função ao carregar a página principal (após login)
+  document.addEventListener('DOMContentLoaded', function() {
+    if (document.getElementById('filmesContainer')) {
+      handleClientLoad();
+    }
+  });
+</script>
+<script>
+function onSignIn(response) {
+  // Aqui você pode esconder o login e mostrar o conteúdo principal
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('mainContent').style.display = 'block';
+  document.querySelector('.navbar').style.display = 'flex';
+  // Você pode acessar o token: response.credential
+}
+</script>
+</body>
+</html>
+
